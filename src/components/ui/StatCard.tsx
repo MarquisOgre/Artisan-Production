@@ -1,0 +1,44 @@
+import { cn } from "@/lib/utils";
+import { LucideIcon } from "lucide-react";
+
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: LucideIcon;
+  trend?: {
+    value: number;
+    isPositive: boolean;
+  };
+  className?: string;
+}
+
+export function StatCard({ title, value, icon: Icon, trend, className }: StatCardProps) {
+  return (
+    <div
+      className={cn(
+        "rounded-xl border border-border bg-card p-5 shadow-card transition-all hover:shadow-card-hover animate-slide-up",
+        className
+      )}
+    >
+      <div className="flex items-start justify-between">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
+          {trend && (
+            <p
+              className={cn(
+                "text-xs font-medium",
+                trend.isPositive ? "text-success" : "text-destructive"
+              )}
+            >
+              {trend.isPositive ? "+" : "-"}{Math.abs(trend.value)}% from last month
+            </p>
+          )}
+        </div>
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10">
+          <Icon className="h-5 w-5 text-primary" />
+        </div>
+      </div>
+    </div>
+  );
+}
