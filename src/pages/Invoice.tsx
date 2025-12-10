@@ -1,95 +1,46 @@
+import { useState } from "react";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2, Printer, Send } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
+import { useInvoice } from "@/hooks/useInvoice";
+import { InvoiceFormDialog } from "@/components/forms/InvoiceFormDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-interface InvoiceItem {
-  id: string;
-  invoiceNo: string;
-  customerName: string;
-  invoiceDate: string;
-  dueDate: string;
-  amount: number;
-  paidAmount: number;
-  status: "pending" | "completed" | "in-progress";
-}
-
-const sampleData: InvoiceItem[] = [
-  { id: "INV-001", invoiceNo: "INV/2024/001", customerName: "Fashion Retail Co.", invoiceDate: "2024-01-15", dueDate: "2024-02-14", amount: 175000, paidAmount: 175000, status: "completed" },
-  { id: "INV-002", invoiceNo: "INV/2024/002", customerName: "Style Hub Ltd.", invoiceDate: "2024-01-18", dueDate: "2024-02-17", amount: 358800, paidAmount: 100000, status: "in-progress" },
-  { id: "INV-003", invoiceNo: "INV/2024/003", customerName: "Garment World", invoiceDate: "2024-01-20", dueDate: "2024-02-19", amount: 360000, paidAmount: 0, status: "pending" },
-  { id: "INV-004", invoiceNo: "INV/2024/004", customerName: "Trendy Wear", invoiceDate: "2024-01-12", dueDate: "2024-02-11", amount: 174650, paidAmount: 174650, status: "completed" },
-  { id: "INV-005", invoiceNo: "INV/2024/005", customerName: "Urban Outfitters", invoiceDate: "2024-01-22", dueDate: "2024-02-21", amount: 473550, paidAmount: 200000, status: "in-progress" },
-];
-
-const formatCurrency = (value: number) => `₹${value.toLocaleString()}`;
-
-const columns = [
-  { key: "invoiceNo", header: "Invoice No" },
-  { key: "customerName", header: "Customer" },
-  { key: "invoiceDate", header: "Invoice Date" },
-  { key: "dueDate", header: "Due Date" },
-  { 
-    key: "amount", 
-    header: "Amount",
-    render: (item: InvoiceItem) => (
-      <span className="font-semibold">{formatCurrency(item.amount)}</span>
-    )
-  },
-  { 
-    key: "paidAmount", 
-    header: "Paid",
-    render: (item: InvoiceItem) => (
-      <span className="text-success font-medium">{formatCurrency(item.paidAmount)}</span>
-    )
-  },
-  { 
-    key: "balance", 
-    header: "Balance",
-    render: (item: InvoiceItem) => {
-      const balance = item.amount - item.paidAmount;
-      return (
-        <span className={balance > 0 ? "text-warning font-medium" : "text-muted-foreground"}>
-          {formatCurrency(balance)}
-        </span>
-      );
-    }
-  },
-  { 
-    key: "status", 
-    header: "Status",
-    render: (item: InvoiceItem) => <StatusBadge status={item.status} />
-  },
-  {
-    key: "actions",
-    header: "Actions",
-    render: () => (
-      <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Eye className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Printer className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Send className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    ),
-  },
-];
+const formatCurrency = (value: number) => `₹${(value || 0).toLocaleString()}`;
 
 export default function Invoice() {
+  const { data, loading, addItem, updateItem, deleteItem } = useInvoice();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editItem, setEditItem] = useState<any>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const getStatusType = (status: string) => { if (status === "Paid") return "completed"; if (status === "Partial") return "in-progress"; return "pending"; };
+
+  const columns = [
+    { key: "invoice_no", header: "Invoice No" },
+    { key: "customer", header: "Customer" },
+    { key: "invoice_date", header: "Date" },
+    { key: "due_date", header: "Due Date" },
+    { key: "total_amount", header: "Amount", render: (item: any) => <span className="font-semibold">{formatCurrency(item.total_amount)}</span> },
+    { key: "paid_amount", header: "Paid", render: (item: any) => <span className="text-green-600 font-medium">{formatCurrency(item.paid_amount)}</span> },
+    { key: "balance", header: "Balance", render: (item: any) => <span className={item.balance > 0 ? "text-yellow-600 font-medium" : "text-muted-foreground"}>{formatCurrency(item.balance)}</span> },
+    { key: "status", header: "Status", render: (item: any) => <StatusBadge status={getStatusType(item.status)} /> },
+    { key: "actions", header: "Actions", render: (item: any) => (
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditItem(item); setDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(item.id)}><Trash2 className="h-4 w-4" /></Button>
+      </div>
+    )},
+  ];
+
+  const handleSubmit = async (formData: any) => editItem ? updateItem(editItem.id, formData) : addItem(formData);
+
   return (
-    <DataTable
-      columns={columns}
-      data={sampleData}
-      searchPlaceholder="Search invoices..."
-      onAdd={() => console.log("Create new invoice")}
-      addButtonText="Create Invoice"
-    />
+    <>
+      <DataTable columns={columns} data={data} searchPlaceholder="Search invoices..." onAdd={() => { setEditItem(null); setDialogOpen(true); }} addButtonText="Create Invoice" />
+      <InvoiceFormDialog open={dialogOpen} onOpenChange={setDialogOpen} onSubmit={handleSubmit} initialData={editItem || undefined} mode={editItem ? "edit" : "add"} />
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Invoice?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => { if (deleteId) deleteItem(deleteId); setDeleteId(null); }}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    </>
   );
 }

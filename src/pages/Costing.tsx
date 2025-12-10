@@ -1,102 +1,43 @@
+import { useState } from "react";
 import { DataTable } from "@/components/ui/DataTable";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
+import { useCosting } from "@/hooks/useCosting";
+import { CostingFormDialog } from "@/components/forms/CostingFormDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-interface CostingItem {
-  id: string;
-  styleName: string;
-  fabricCost: number;
-  trimsCost: number;
-  laborCost: number;
-  overheadCost: number;
-  totalCost: number;
-  sellingPrice: number;
-  status: "draft" | "completed" | "pending";
-}
-
-const sampleData: CostingItem[] = [
-  { id: "CST-001", styleName: "Classic Oxford", fabricCost: 150, trimsCost: 25, laborCost: 80, overheadCost: 20, totalCost: 275, sellingPrice: 350, status: "completed" },
-  { id: "CST-002", styleName: "Slim Fit Casual", fabricCost: 120, trimsCost: 20, laborCost: 75, overheadCost: 18, totalCost: 233, sellingPrice: 299, status: "completed" },
-  { id: "CST-003", styleName: "Linen Summer", fabricCost: 200, trimsCost: 30, laborCost: 90, overheadCost: 25, totalCost: 345, sellingPrice: 450, status: "pending" },
-  { id: "CST-004", styleName: "Denim Jacket", fabricCost: 180, trimsCost: 45, laborCost: 120, overheadCost: 30, totalCost: 375, sellingPrice: 499, status: "draft" },
-  { id: "CST-005", styleName: "Polo Classic", fabricCost: 100, trimsCost: 15, laborCost: 60, overheadCost: 15, totalCost: 190, sellingPrice: 249, status: "completed" },
-];
-
-const formatCurrency = (value: number) => `₹${value.toLocaleString()}`;
-
-const columns = [
-  { key: "id", header: "Costing ID" },
-  { key: "styleName", header: "Style Name" },
-  { 
-    key: "fabricCost", 
-    header: "Fabric",
-    render: (item: CostingItem) => formatCurrency(item.fabricCost)
-  },
-  { 
-    key: "trimsCost", 
-    header: "Trims",
-    render: (item: CostingItem) => formatCurrency(item.trimsCost)
-  },
-  { 
-    key: "laborCost", 
-    header: "Labor",
-    render: (item: CostingItem) => formatCurrency(item.laborCost)
-  },
-  { 
-    key: "totalCost", 
-    header: "Total Cost",
-    render: (item: CostingItem) => (
-      <span className="font-semibold">{formatCurrency(item.totalCost)}</span>
-    )
-  },
-  { 
-    key: "sellingPrice", 
-    header: "Selling Price",
-    render: (item: CostingItem) => (
-      <span className="font-semibold text-success">{formatCurrency(item.sellingPrice)}</span>
-    )
-  },
-  { 
-    key: "margin", 
-    header: "Margin",
-    render: (item: CostingItem) => {
-      const margin = ((item.sellingPrice - item.totalCost) / item.sellingPrice * 100).toFixed(1);
-      return <span className="text-accent font-medium">{margin}%</span>;
-    }
-  },
-  { 
-    key: "status", 
-    header: "Status",
-    render: (item: CostingItem) => <StatusBadge status={item.status} />
-  },
-  {
-    key: "actions",
-    header: "Actions",
-    render: () => (
-      <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Eye className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    ),
-  },
-];
+const formatCurrency = (value: number) => `₹${(value || 0).toLocaleString()}`;
 
 export default function Costing() {
+  const { data, loading, addItem, updateItem, deleteItem } = useCosting();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editItem, setEditItem] = useState<any>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const columns = [
+    { key: "style_no", header: "Style No" },
+    { key: "style_name", header: "Style Name" },
+    { key: "fabric_cost", header: "Fabric", render: (item: any) => formatCurrency(item.fabric_cost) },
+    { key: "trims_cost", header: "Trims", render: (item: any) => formatCurrency(item.trims_cost) },
+    { key: "labor_cost", header: "Labor", render: (item: any) => formatCurrency(item.labor_cost) },
+    { key: "total_cost", header: "Total Cost", render: (item: any) => <span className="font-semibold">{formatCurrency(item.total_cost)}</span> },
+    { key: "selling_price", header: "Selling Price", render: (item: any) => <span className="font-semibold text-green-600">{formatCurrency(item.selling_price)}</span> },
+    { key: "margin", header: "Margin", render: (item: any) => <span className="text-accent font-medium">{item.margin?.toFixed(1) || 0}%</span> },
+    { key: "actions", header: "Actions", render: (item: any) => (
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditItem(item); setDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(item.id)}><Trash2 className="h-4 w-4" /></Button>
+      </div>
+    )},
+  ];
+
+  const handleSubmit = async (formData: any) => editItem ? updateItem(editItem.id, formData) : addItem(formData);
+
   return (
-    <DataTable
-      columns={columns}
-      data={sampleData}
-      searchPlaceholder="Search costings..."
-      onAdd={() => console.log("Add new costing")}
-      addButtonText="Add Costing"
-    />
+    <>
+      <DataTable columns={columns} data={data} searchPlaceholder="Search costings..." onAdd={() => { setEditItem(null); setDialogOpen(true); }} addButtonText="Add Costing" />
+      <CostingFormDialog open={dialogOpen} onOpenChange={setDialogOpen} onSubmit={handleSubmit} initialData={editItem || undefined} mode={editItem ? "edit" : "add"} />
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Costing?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => { if (deleteId) deleteItem(deleteId); setDeleteId(null); }}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    </>
   );
 }
