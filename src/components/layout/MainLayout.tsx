@@ -22,7 +22,7 @@ const pageTitles: Record<string, string> = {
 export function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const title = pageTitles[location.pathname] || "ShirtMFG Pro";
+  const title = pageTitles[location.pathname] || "Artisan Apparels";
 
   return (
     <div className="min-h-screen bg-background">

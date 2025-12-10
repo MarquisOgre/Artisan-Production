@@ -65,7 +65,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Shirt className="h-5 w-5 text-sidebar-primary-foreground" />
               </div>
               <span className="text-lg font-semibold text-sidebar-foreground">
-                ShirtMFG
+                ARTISAN
               </span>
             </div>
             <button
@@ -104,7 +104,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Footer */}
           <div className="border-t border-sidebar-border p-4">
             <p className="text-xs text-sidebar-foreground/50">
-              © 2024 ShirtMFG Pro
+              © 2020 Artisan Apparels
             </p>
           </div>
         </div>
