@@ -1,80 +1,41 @@
+import { useState } from "react";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2 } from "lucide-react";
-
-interface StockItem {
-  id: string;
-  itemName: string;
-  category: string;
-  currentStock: number;
-  minStock: number;
-  unit: string;
-  warehouse: string;
-  status: "pending" | "completed" | "in-progress";
-}
-
-const sampleData: StockItem[] = [
-  { id: "STK-001", itemName: "White Cotton Fabric", category: "Fabric", currentStock: 5000, minStock: 1000, unit: "mtrs", warehouse: "Warehouse A", status: "completed" },
-  { id: "STK-002", itemName: "Pearl Buttons - 18L", category: "Trims", currentStock: 15000, minStock: 5000, unit: "pcs", warehouse: "Warehouse B", status: "completed" },
-  { id: "STK-003", itemName: "Navy Thread", category: "Thread", currentStock: 200, minStock: 500, unit: "cones", warehouse: "Warehouse A", status: "pending" },
-  { id: "STK-004", itemName: "Collar Interlining", category: "Interlining", currentStock: 3000, minStock: 1000, unit: "mtrs", warehouse: "Warehouse A", status: "completed" },
-  { id: "STK-005", itemName: "Polybags - Large", category: "Packing", currentStock: 8000, minStock: 2000, unit: "pcs", warehouse: "Warehouse C", status: "completed" },
-];
-
-const columns = [
-  { key: "id", header: "Stock ID" },
-  { key: "itemName", header: "Item Name" },
-  { key: "category", header: "Category" },
-  { 
-    key: "currentStock", 
-    header: "Current Stock",
-    render: (item: StockItem) => (
-      <span className={item.currentStock < item.minStock ? "text-destructive font-medium" : ""}>
-        {item.currentStock.toLocaleString()} {item.unit}
-      </span>
-    )
-  },
-  { 
-    key: "minStock", 
-    header: "Min Stock",
-    render: (item: StockItem) => `${item.minStock.toLocaleString()} ${item.unit}`
-  },
-  { key: "warehouse", header: "Warehouse" },
-  { 
-    key: "status", 
-    header: "Status",
-    render: (item: StockItem) => (
-      <StatusBadge status={item.currentStock < item.minStock ? "pending" : "completed"} />
-    )
-  },
-  {
-    key: "actions",
-    header: "Actions",
-    render: () => (
-      <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Eye className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    ),
-  },
-];
+import { Pencil, Trash2 } from "lucide-react";
+import { useStockRegister } from "@/hooks/useStockRegister";
+import { StockRegisterFormDialog } from "@/components/forms/StockRegisterFormDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function StockRegister() {
+  const { data, loading, addItem, updateItem, deleteItem } = useStockRegister();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editItem, setEditItem] = useState<any>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const columns = [
+    { key: "item_code", header: "Item Code" },
+    { key: "item_name", header: "Item Name" },
+    { key: "category", header: "Category" },
+    { key: "current_stock", header: "Current Stock", render: (item: any) => <span className={item.current_stock < item.min_stock ? "text-destructive font-medium" : ""}>{item.current_stock?.toLocaleString() || 0} {item.unit}</span> },
+    { key: "min_stock", header: "Min Stock", render: (item: any) => `${item.min_stock?.toLocaleString() || 0} ${item.unit}` },
+    { key: "location", header: "Location" },
+    { key: "status", header: "Status", render: (item: any) => <StatusBadge status={item.current_stock < item.min_stock ? "pending" : "completed"} /> },
+    { key: "actions", header: "Actions", render: (item: any) => (
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setEditItem(item); setDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(item.id)}><Trash2 className="h-4 w-4" /></Button>
+      </div>
+    )},
+  ];
+
+  const handleSubmit = async (formData: any) => editItem ? updateItem(editItem.id, formData) : addItem(formData);
+
   return (
-    <DataTable
-      columns={columns}
-      data={sampleData}
-      searchPlaceholder="Search stock items..."
-      onAdd={() => console.log("Add new stock item")}
-      addButtonText="Add Stock"
-    />
+    <>
+      <DataTable columns={columns} data={data} searchPlaceholder="Search stock..." onAdd={() => { setEditItem(null); setDialogOpen(true); }} addButtonText="Add Stock" />
+      <StockRegisterFormDialog open={dialogOpen} onOpenChange={setDialogOpen} onSubmit={handleSubmit} initialData={editItem || undefined} mode={editItem ? "edit" : "add"} />
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Item?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => { if (deleteId) deleteItem(deleteId); setDeleteId(null); }}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    </>
   );
 }
