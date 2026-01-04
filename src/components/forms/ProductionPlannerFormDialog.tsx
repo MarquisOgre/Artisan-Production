@@ -34,7 +34,7 @@ interface FormData {
 interface ProductionPlannerFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: FormData) => Promise<{ error: Error | null }>;
+  onSubmit: (data: FormData) => Promise<void>;
   initialData?: Partial<FormData>;
   mode: "add" | "edit";
 }
@@ -79,10 +79,12 @@ export function ProductionPlannerFormDialog({ open, onOpenChange, onSubmit, init
     }
 
     setLoading(true);
-    const { error } = await onSubmit(dataToSubmit);
-    setLoading(false);
-
-    if (!error) onOpenChange(false);
+    try {
+      await onSubmit(dataToSubmit);
+      onOpenChange(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

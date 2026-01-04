@@ -8,7 +8,7 @@ import { TrimFormDialog } from "@/components/forms/TrimFormDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function TrimsRegister() {
-  const { data, loading, addTrim, updateTrim, deleteTrim } = useTrimsRegister();
+  const { data, loading, addItem, updateItem, deleteItem } = useTrimsRegister();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -37,12 +37,7 @@ export default function TrimsRegister() {
     },
   ];
 
-  const handleSubmit = async (formData: any) => {
-    if (editItem) {
-      return updateTrim(editItem.id, formData);
-    }
-    return addTrim(formData);
-  };
+  const handleSubmit = async (formData: any) => editItem ? updateItem(editItem.id, formData) : addItem(formData);
 
   return (
     <>
@@ -51,7 +46,7 @@ export default function TrimsRegister() {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader><AlertDialogTitle>Delete Trim?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
-          <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => { if (deleteId) deleteTrim(deleteId); setDeleteId(null); }}>Delete</AlertDialogAction></AlertDialogFooter>
+          <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => { if (deleteId) deleteItem(deleteId); setDeleteId(null); }}>Delete</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>

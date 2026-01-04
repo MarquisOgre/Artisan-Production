@@ -38,7 +38,7 @@ interface FormData {
 interface CuttingPlannerFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: FormData) => Promise<{ error: Error | null }>;
+  onSubmit: (data: FormData) => Promise<void>;
   initialData?: Partial<FormData>;
   mode: "add" | "edit";
 }
@@ -86,11 +86,11 @@ export function CuttingPlannerFormDialog({ open, onOpenChange, onSubmit, initial
     }
 
     setLoading(true);
-    const { error } = await onSubmit(dataToSubmit);
-    setLoading(false);
-
-    if (!error) {
+    try {
+      await onSubmit(dataToSubmit);
       onOpenChange(false);
+    } finally {
+      setLoading(false);
     }
   };
 

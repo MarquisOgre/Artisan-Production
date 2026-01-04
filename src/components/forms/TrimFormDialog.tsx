@@ -31,7 +31,7 @@ interface TrimFormData {
 interface TrimFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: TrimFormData) => Promise<{ error: Error | null }>;
+  onSubmit: (data: TrimFormData) => Promise<void>;
   initialData?: Partial<TrimFormData>;
   mode: "add" | "edit";
 }
@@ -68,12 +68,12 @@ export function TrimFormDialog({ open, onOpenChange, onSubmit, initialData, mode
     }
 
     setLoading(true);
-    const { error } = await onSubmit(formData);
-    setLoading(false);
-
-    if (!error) {
+    try {
+      await onSubmit(formData);
       onOpenChange(false);
       setFormData({ trim_id: "", trim_name: "", category: "", supplier: "", quantity: 0, unit: "pcs", rate: 0, status: "In Stock" });
+    } finally {
+      setLoading(false);
     }
   };
 
