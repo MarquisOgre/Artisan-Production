@@ -5,6 +5,7 @@ import { Header } from "./Header";
 
 const pageTitles: Record<string, string> = {
   "/": "Dashboard",
+  "/profile": "Profile Settings",
   "/trims-register": "Trims Register",
   "/cutting-planner": "Cutting Planner",
   "/production-planner": "Production Planner",

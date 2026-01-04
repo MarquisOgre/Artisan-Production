@@ -8,6 +8,9 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { MainLayout } from "@/components/layout/MainLayout";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
 import TrimsRegister from "./pages/TrimsRegister";
 import CuttingPlanner from "./pages/CuttingPlanner";
 import ProductionPlanner from "./pages/ProductionPlanner";
@@ -33,9 +36,12 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<MainLayout />}>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
                 <Route path="/trims-register" element={<TrimsRegister />} />
                 <Route path="/cutting-planner" element={<CuttingPlanner />} />
                 <Route path="/production-planner" element={<ProductionPlanner />} />
