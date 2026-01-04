@@ -47,16 +47,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
+    const redirectUrl = `${window.location.origin}/`;
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: { 
+        data: { full_name: fullName },
+        emailRedirectTo: redirectUrl
+      },
     });
     if (error) {
       toast.error(error.message);
       throw error;
     }
-    toast.success("Account created successfully");
+    toast.success("Account created successfully! You can now sign in.");
   };
 
   const signOut = async () => {
