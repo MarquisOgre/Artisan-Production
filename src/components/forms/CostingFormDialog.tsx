@@ -30,7 +30,7 @@ interface FormData {
 interface CostingFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: FormData) => Promise<{ error: Error | null }>;
+  onSubmit: (data: FormData) => Promise<void>;
   initialData?: Partial<FormData>;
   mode: "add" | "edit";
 }
@@ -74,10 +74,12 @@ export function CostingFormDialog({ open, onOpenChange, onSubmit, initialData, m
     }
 
     setLoading(true);
-    const { error } = await onSubmit(formData);
-    setLoading(false);
-
-    if (!error) onOpenChange(false);
+    try {
+      await onSubmit(formData);
+      onOpenChange(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
